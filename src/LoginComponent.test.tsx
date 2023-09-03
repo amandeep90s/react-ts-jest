@@ -65,4 +65,78 @@ describe('LoginComponent test suite', () => {
     const resultLabel = screen.getByTestId('resultLabel');
     expect(resultLabel.textContent).toBe('UserName and password are required');
   });
+
+  it('Right credentials - successful login', async () => {
+    loginServiceMock.login.mockResolvedValueOnce('1234');
+    const inputs = container.querySelectorAll('input');
+    const userNameInput = inputs[0];
+    const passwordInput = inputs[1];
+    const loginButton = inputs[2];
+
+    fireEvent.change(userNameInput, { target: { value: 'someUser' } });
+    fireEvent.change(passwordInput, { target: { value: 'somePassword' } });
+    fireEvent.click(loginButton);
+
+    expect(loginServiceMock.login).toBeCalledWith('someUser', 'somePassword');
+
+    const resultLabel = await screen.findByTestId('resultLabel');
+    expect(resultLabel.textContent).toBe('Login successful');
+  });
+
+  it('Right credentials - successful login - with user calls', async () => {
+    loginServiceMock.login.mockResolvedValueOnce('1234');
+    const inputs = container.querySelectorAll('input');
+    const userNameInput = inputs[0];
+    const passwordInput = inputs[1];
+    const loginButton = inputs[2];
+
+    act(() => {
+      user.click(userNameInput);
+      user.keyboard('someUser');
+      user.click(passwordInput);
+      user.keyboard('somePassword');
+      user.click(loginButton);
+    });
+
+    expect(loginServiceMock.login).toBeCalledWith('someUser', 'somePassword');
+
+    const resultLabel = await screen.findByTestId('resultLabel');
+    expect(resultLabel.textContent).toBe('Login successful');
+  });
+
+  it('Wrong credentials - usuccessful login', async () => {
+    loginServiceMock.login.mockResolvedValueOnce(undefined);
+    const inputs = container.querySelectorAll('input');
+    const userNameInput = inputs[0];
+    const passwordInput = inputs[1];
+    const loginButton = inputs[2];
+
+    fireEvent.change(userNameInput, { target: { value: 'someUser' } });
+    fireEvent.change(passwordInput, { target: { value: 'somePassword' } });
+    fireEvent.click(loginButton);
+
+    expect(loginServiceMock.login).toBeCalledWith('someUser', 'somePassword');
+
+    const resultLabel = await screen.findByTestId('resultLabel');
+    expect(resultLabel.textContent).toBe('Invalid credentials');
+  });
+
+  it('Wrong credentials - usuccessful login - solve act warnings', async () => {
+    const result = Promise.resolve(undefined);
+    loginServiceMock.login.mockResolvedValueOnce(result);
+    const inputs = container.querySelectorAll('input');
+    const userNameInput = inputs[0];
+    const passwordInput = inputs[1];
+    const loginButton = inputs[2];
+
+    fireEvent.change(userNameInput, { target: { value: 'someUser' } });
+    fireEvent.change(passwordInput, { target: { value: 'somePassword' } });
+    fireEvent.click(loginButton);
+
+    await result;
+    expect(loginServiceMock.login).toBeCalledWith('someUser', 'somePassword');
+
+    const resultLabel = await screen.findByTestId('resultLabel');
+    expect(resultLabel.textContent).toBe('Invalid credentials');
+  });
 });
